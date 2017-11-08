@@ -37,16 +37,26 @@ int main(int argc, char *argv[])
 	int rv;
 	char s[INET6_ADDRSTRLEN];
 
-	if (argc != 2) {
-	    fprintf(stderr,"usage: client hostname\n");
+	if (argc == 3 && strcmp(argv[0], "./client") == 0 && (strcmp(argv[1], "DIV") == 0 || strcmp(argv[1], "LOG") == 0));
+	else {	
+	    fprintf(stderr,"usage: client LOG/DIV x\n");
 	    exit(1);
 	}
+
+//	printf("%s\n", argv[0]);
+//	printf("%s\n", argv[1]);
+//	printf("%s\n", argv[2]);
+
+//	if (argv[1] != a) {
+//	    fprintf(stderr,"usage: client LOG/DIV x\n");
+//            exit(1);
+//	}
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 
-	if ((rv = getaddrinfo(argv[1], PORT, &hints, &servinfo)) != 0) {
+	if ((rv = getaddrinfo("127.0.0.1", PORT, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
 	}
@@ -79,7 +89,12 @@ int main(int argc, char *argv[])
 
 	freeaddrinfo(servinfo); // all done with this structure
 
-	if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
+	if (send(sockfd, argv[2], 1, 0) == -1)	// send the value of x to aws
+		 perror("send");
+
+	if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {	// numbytes: the number of data you actually received
+									// buf: where to store	
+								
 	    perror("recv");
 	    exit(1);
 	}

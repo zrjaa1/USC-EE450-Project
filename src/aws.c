@@ -19,7 +19,7 @@ Source code from: Socket Programming Reference - (Beej's-Guide)
 #include <signal.h>
 
 #define PORT "3490"  // the port users will be connecting to
-
+#define MAXDATASIZE 100
 #define BACKLOG 10	 // how many pending connections queue will hold
 
 void sigchld_handler(int s)
@@ -54,9 +54,10 @@ int main(void)
 	socklen_t sin_size;	// this variable indicates the size of socket
 	struct sigaction sa;	// sigaction is a structure used to deal with zombie process
 	int yes=1;	
-	char s[INET6_ADDRSTRLEN];	// buffer used to store address of client
+	char s[INET6_ADDRSTRLEN];	// buffer used to store address of client (in form of xxx.xxx.xxx.xxx)
 	int rv;			// used to store info of an particular host name, used for display only if error happens	
-
+	int numbytes;
+	char buf[MAXDATASIZE];
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
@@ -127,16 +128,20 @@ int main(void)
 			continue;
 		}
 
-		inet_ntop(their_addr.ss_family,
+		inet_ntop(their_addr.ss_family,					// convert IP address of 2nd parameter to human-readble IP address, stored in third parameter
 			get_in_addr((struct sockaddr *)&their_addr),
 			s, sizeof s);
 		printf("server: got connection from %s\n", s);
 
 		if (!fork()) { // this is the child process
 			close(sockfd); // child doesn't need the listener	// here what is actually closed is the child's copy of the sockfd file descriptor
+			if ((numbytes = recv(new_fd, buf, MAXDATASIZE-1, 0)) == -1) {
+				perror("recv");
+				exit(1);
+			} 
 	// instead of saying "hello", the aws works like a client, contact back-servers via UDP here
 
-			if (send(new_fd, "calculated result is", 15, 0) == -1)	// parameter 1: socket that's sending
+			if (send(new_fd, &buf, numbytes, 0) == -1)	// parameter 1: socket that's sending
 										// parameter 2: what you want to send
 										// parameter 3: size you send
 										// parameter 4: flag
