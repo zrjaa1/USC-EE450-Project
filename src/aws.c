@@ -19,10 +19,11 @@ Source code from: Socket Programming Reference - (Beej's-Guide)
 #include <signal.h>
 
 #define PORT "25831"  // the port users will be connecting to
+#define UDP_PORT "24831"
 #define MAXDATASIZE 100
 #define BACKLOG 10	 // how many pending connections queue will hold
 
-#define SERVER_A_PORT "21831"
+#define SERVER_A_PORT "21832"
 #define SERVER_B_PORT "22831"
 #define SERVER_C_PORT "23831"
 void sigchld_handler(int s)
@@ -124,7 +125,7 @@ int main(void)
 
 	printf("server: waiting for connections...\n");
 
-// UDP server initialization
+// UDP server A initialization
 
 	int udp_A_sockfd;
 	struct addrinfo udp_A_hints, *udp_A_servinfo, *udp_A_p;
@@ -155,6 +156,115 @@ int main(void)
 		fprintf(stderr, "talker: failed to create socket\n");
 		return 2;
 	}
+
+// UDP server B initialization
+
+	int udp_B_sockfd;
+	struct addrinfo udp_B_hints, *udp_B_servinfo, *udp_B_p;
+	int udp_B_rv;
+	int udp_B_numbytes;
+
+	memset(&udp_B_hints, 0, sizeof udp_B_hints);
+	udp_B_hints.ai_family = AF_UNSPEC;
+	udp_B_hints.ai_socktype = SOCK_DGRAM;
+
+	if ((udp_B_rv = getaddrinfo("127.0.0.1", SERVER_B_PORT, &udp_B_hints, &udp_B_servinfo)) != 0) {	// server port is defined, the hostname should be 127.0.0.1
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(udp_B_rv));
+		return 1;
+	}
+
+	// loop through all the results and make a socket
+	for(udp_B_p = udp_B_servinfo; udp_B_p != NULL; udp_B_p = udp_B_p->ai_next) {
+		if ((udp_B_sockfd = socket(udp_B_p->ai_family, udp_B_p->ai_socktype,
+				udp_B_p->ai_protocol)) == -1) {
+			perror("talker: socket");
+			continue;
+		}
+
+		break;
+	}
+
+	if (udp_B_p == NULL) {
+		fprintf(stderr, "talker: failed to create socket\n");
+		return 2;
+	}
+
+// UDP server C initialization
+
+	int udp_C_sockfd;
+	struct addrinfo udp_C_hints, *udp_C_servinfo, *udp_C_p;
+	int udp_C_rv;
+	int udp_C_numbytes;
+
+	memset(&udp_C_hints, 0, sizeof udp_C_hints);
+	udp_C_hints.ai_family = AF_UNSPEC;
+	udp_C_hints.ai_socktype = SOCK_DGRAM;
+
+	if ((udp_C_rv = getaddrinfo("127.0.0.1", SERVER_C_PORT, &udp_C_hints, &udp_C_servinfo)) != 0) {	// server port is defined, the hostname should be 127.0.0.1
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(udp_C_rv));
+		return 1;
+	}
+
+	// loop through all the results and make a socket
+	for(udp_C_p = udp_C_servinfo; udp_C_p != NULL; udp_C_p = udp_C_p->ai_next) {
+		if ((udp_C_sockfd = socket(udp_C_p->ai_family, udp_C_p->ai_socktype,
+				udp_C_p->ai_protocol)) == -1) {
+			perror("talker: socket");
+			continue;
+		}
+
+		break;
+	}
+
+	if (udp_C_p == NULL) {
+		fprintf(stderr, "talker: failed to create socket\n");
+		return 2;
+	}
+
+// UDP listener initialization
+
+	int udp_listener_sockfd;
+	struct addrinfo udp_listener_hints, *udp_listener_servinfo, *udp_listener_p;
+	int udp_listener_rv;
+	int udp_listener_numbytes;
+	struct sockaddr_storage udp_listener_their_addr;
+	float udp_listener_buf;
+	socklen_t udp_listener_addr_len;
+	char udp_listener_s[INET6_ADDRSTRLEN];
+
+	memset(&udp_listener_hints, 0, sizeof udp_listener_hints);
+	udp_listener_hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
+	udp_listener_hints.ai_socktype = SOCK_DGRAM;
+	udp_listener_hints.ai_flags = AI_PASSIVE; // use my IP
+
+	if ((udp_listener_rv = getaddrinfo(NULL, UDP_PORT, &udp_listener_hints, &udp_listener_servinfo)) != 0) {
+		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(udp_listener_rv));
+		return 1;
+	}
+
+	// loop through all the results and bind to the first we can
+	for(udp_listener_p = udp_listener_servinfo; udp_listener_p != NULL; udp_listener_p = udp_listener_p->ai_next) {
+		if ((udp_listener_sockfd = socket(udp_listener_p->ai_family, udp_listener_p->ai_socktype,
+				udp_listener_p->ai_protocol)) == -1) {
+			perror("listener: socket");
+			continue;
+		}
+
+		if (bind(udp_listener_sockfd, udp_listener_p->ai_addr, udp_listener_p->ai_addrlen) == -1) {
+			close(udp_listener_sockfd);
+			perror("listener: bind");
+			continue;
+		}
+
+		break;
+	}
+
+	if (udp_listener_p == NULL) {
+		fprintf(stderr, "listener: failed to bind socket\n");
+		return 2;
+	}
+
+	freeaddrinfo(udp_listener_servinfo);
 
 // main loop
 	while(1) {  
@@ -192,7 +302,9 @@ int main(void)
 			printf("the operation is LOG\n");
 		}
 
-	// instead of saying "hello", the aws works like a client, contact back-servers via UDP here
+		// instead of saying "hello", the aws works like a client, contact back-servers via UDP here
+
+		//send message to server A
 		if ((udp_A_numbytes = sendto(udp_A_sockfd, &operator, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 udp_A_p->ai_addr, udp_A_p->ai_addrlen)) == -1) {
 			perror("talker: sendto");
@@ -201,9 +313,52 @@ int main(void)
 
 		freeaddrinfo(udp_A_servinfo);
 
-		printf("talker: sent %d bytes to AWS\n", udp_A_numbytes);
+		printf("AWS: sent %d bytes to server A\n", udp_A_numbytes);
 		close(udp_A_sockfd);
 
+		// receive from A
+
+		printf("listener: waiting to recvfrom...\n");
+		udp_listener_addr_len = sizeof udp_listener_their_addr;
+		if ((udp_listener_numbytes = recvfrom(udp_listener_sockfd, &udp_listener_buf, 4 , 0,			//wait for the incoming packets
+			(struct sockaddr *)&udp_listener_their_addr, &udp_listener_addr_len)) == -1) {
+			perror("recvfrom");
+			exit(1);
+	}	
+
+		printf("listener: got packet from %s\n",				// translate into readable ip address, then print it out
+			inet_ntop(udp_listener_their_addr.ss_family,
+				get_in_addr((struct sockaddr *)&udp_listener_their_addr),
+				udp_listener_s, sizeof udp_listener_s));
+		printf("listener: packet is %d bytes long\n", udp_listener_numbytes);
+		printf("listener: packet contains \"%f\"\n", udp_listener_buf);
+
+		close(udp_listener_sockfd);
+/*
+		//send message to server B
+		if ((udp_B_numbytes = sendto(udp_B_sockfd, &operator, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
+			 udp_B_p->ai_addr, udp_B_p->ai_addrlen)) == -1) {
+			perror("talker: sendto");
+			exit(1);
+		}
+
+		freeaddrinfo(udp_B_servinfo);
+
+		printf("AWS: sent %d bytes to server B\n", udp_B_numbytes);
+		close(udp_B_sockfd);
+
+		//send message to server C
+		if ((udp_C_numbytes = sendto(udp_C_sockfd, &operator, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
+			 udp_C_p->ai_addr, udp_C_p->ai_addrlen)) == -1) {
+			perror("talker: sendto");
+			exit(1);
+		}
+
+		freeaddrinfo(udp_C_servinfo);
+
+		printf("AWS: sent %d bytes to server C\n", udp_C_numbytes);
+		close(udp_C_sockfd);
+*/
 		if (send(new_fd, &operator, 4, 0) == -1)		// parameter 1: socket that's sending
 									// parameter 2: pointer to what you want to send
 									// parameter 3: size you send
