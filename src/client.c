@@ -32,7 +32,8 @@ void *get_in_addr(struct sockaddr *sa)
 int main(int argc, char *argv[])
 {
 	int sockfd, numbytes;  
-	char buf[MAXDATASIZE];
+	char recv_buf[MAXDATASIZE];
+	char send_buf[MAXDATASIZE];
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
 	char s[INET6_ADDRSTRLEN];
@@ -43,14 +44,12 @@ int main(int argc, char *argv[])
 	    exit(1);
 	}
 
-//	printf("%s\n", argv[0]);
-//	printf("%s\n", argv[1]);
-//	printf("%s\n", argv[2]);
+	strncpy(send_buf, argv[2], 5);
 
-//	if (argv[1] != a) {
-//	    fprintf(stderr,"usage: client LOG/DIV x\n");
-//            exit(1);
-//	}
+	if (strcmp(argv[1], "DIV") == 0) 
+		send_buf[5] = 0;
+	else
+		send_buf[5] = 1;
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -89,19 +88,19 @@ int main(int argc, char *argv[])
 
 	freeaddrinfo(servinfo); // all done with this structure
 
-	if (send(sockfd, argv[2], 1, 0) == -1)	// send the value of x to aws
+	if (send(sockfd, &send_buf, 1, 0) == -1)	// send the value of x to aws
 		 perror("send");
 
-	if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {	// numbytes: the number of data you actually received
-									// buf: where to store	
+	if ((numbytes = recv(sockfd, recv_buf, MAXDATASIZE-1, 0)) == -1) {	// numbytes: the number of data you actually received
+									// recv_buf: where to store	
 								
 	    perror("recv");
 	    exit(1);
 	}
 
-	buf[numbytes] = '\0';
+	recv_buf[numbytes] = '\0';
 
-	printf("client: received '%s'\n",buf);
+	printf("client: received result: %s\n", recv_buf);
 
 	close(sockfd);
 

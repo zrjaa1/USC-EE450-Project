@@ -57,7 +57,10 @@ int main(void)
 	char s[INET6_ADDRSTRLEN];	// buffer used to store address of client (in form of xxx.xxx.xxx.xxx)
 	int rv;			// used to store info of an particular host name, used for display only if error happens	
 	int numbytes;
-	char buf[MAXDATASIZE];
+	char recv_buf[2];
+	int  operation;
+	char operator[5];
+
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
@@ -135,14 +138,24 @@ int main(void)
 
 		if (!fork()) { // this is the child process
 			close(sockfd); // child doesn't need the listener	// here what is actually closed is the child's copy of the sockfd file descriptor
-			if ((numbytes = recv(new_fd, buf, MAXDATASIZE-1, 0)) == -1) {
+			if ((numbytes = recv(new_fd, recv_buf, MAXDATASIZE-1, 0)) == -1) {
 				perror("recv");
 				exit(1);
 			} 
-	// instead of saying "hello", the aws works like a client, contact back-servers via UDP here
+		if (recv_buf[5] == '0') {
+			operation = 0;
+			printf("the operation is DIV\n");
+		} else {
+			operation = 1;
+			printf("the operation is LOG\n");
+		}
 
-			if (send(new_fd, &buf, numbytes, 0) == -1)	// parameter 1: socket that's sending
-										// parameter 2: what you want to send
+		strncpy(operator, recv_buf, 5);
+
+	// instead of saying "hello", the aws works like a client, contact back-servers via UDP here
+		printf("numbytes equals to %d", numbytes);
+			if (send(new_fd, &operator, numbytes, 0) == -1)	// parameter 1: socket that's sending
+										// parameter 2: pointer to what you want to send
 										// parameter 3: size you send
 										// parameter 4: flag
 				perror("send");
