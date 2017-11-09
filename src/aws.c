@@ -23,7 +23,7 @@ Source code from: Socket Programming Reference - (Beej's-Guide)
 #define MAXDATASIZE 100
 #define BACKLOG 10	 // how many pending connections queue will hold
 
-#define SERVER_A_PORT "21832"
+#define SERVER_A_PORT "21831"
 #define SERVER_B_PORT "22831"
 #define SERVER_C_PORT "23831"
 void sigchld_handler(int s)
@@ -35,7 +35,6 @@ void sigchld_handler(int s)
 
 	errno = saved_errno;
 }
-
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -60,12 +59,19 @@ int main(void)
 	socklen_t sin_size;	// this variable indicates the size of socket
 	struct sigaction sa;	// sigaction is a structure used to deal with zombie process
 	int yes=1;	
+	int i;
+	int port_number;
 	char s[INET6_ADDRSTRLEN];	// buffer used to store address of client (in form of xxx.xxx.xxx.xxx)
 	int rv;			// used to store info of an particular host name, used for display only if error happens	
 	int numbytes;
 	float recv_buf[2];
 	float operation;
 	float operator;
+	float x2;
+	float x3;
+	float x4;
+	float x5;
+	float x6;
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -123,7 +129,7 @@ int main(void)
 		exit(1);
 	}
 
-	printf("server: waiting for connections...\n");
+	printf("The AWS is up and running.\n");
 
 // UDP server A initialization
 
@@ -228,7 +234,7 @@ int main(void)
 	int udp_listener_rv;
 	int udp_listener_numbytes;
 	struct sockaddr_storage udp_listener_their_addr;
-	float udp_listener_buf;
+	float udp_listener_buf[2];
 	socklen_t udp_listener_addr_len;
 	char udp_listener_s[INET6_ADDRSTRLEN];
 
@@ -282,7 +288,6 @@ int main(void)
 		inet_ntop(their_addr.ss_family,					// convert IP address of 2nd parameter to human-readble IP address, stored in third parameter
 			get_in_addr((struct sockaddr *)&their_addr),
 			s, sizeof s);
-		printf("server: got connection from %s\n", s);
 
 		if (!fork()) { // this is the child process
 			close(sockfd); // child doesn't need the listener	// here what is actually closed is the child's copy of the sockfd file descriptor
@@ -294,60 +299,31 @@ int main(void)
 		operator = recv_buf[0];
 		operation = recv_buf[1];
 
-		printf ("the operator is %f\n", operator);
-	
-		if (recv_buf[1] == 0.0) {
-			printf("the operation is DIV\n");
-		} else {
-			printf("the operation is LOG\n");
-		}
+		printf("The AWS received %f", operator);
+		if (operation = 0.0)
+			printf(" and function = DIV from the client using TCP over port "PORT"\n");
+		else
+			printf(" and function = LOG from the client using TCP over port "PORT"\n");
 
-		// instead of saying "hello", the aws works like a client, contact back-servers via UDP here
-
-		//send message to server A
+		//send x to server A
 		if ((udp_A_numbytes = sendto(udp_A_sockfd, &operator, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 udp_A_p->ai_addr, udp_A_p->ai_addrlen)) == -1) {
 			perror("talker: sendto");
 			exit(1);
 		}
 
-		freeaddrinfo(udp_A_servinfo);
+		printf("AWS: sent %f to Backend-Server A\n", operator);
 
-		printf("AWS: sent %d bytes to server A\n", udp_A_numbytes);
-		close(udp_A_sockfd);
-
-		// receive from A
-
-		printf("listener: waiting to recvfrom...\n");
-		udp_listener_addr_len = sizeof udp_listener_their_addr;
-		if ((udp_listener_numbytes = recvfrom(udp_listener_sockfd, &udp_listener_buf, 4 , 0,			//wait for the incoming packets
-			(struct sockaddr *)&udp_listener_their_addr, &udp_listener_addr_len)) == -1) {
-			perror("recvfrom");
-			exit(1);
-	}	
-
-		printf("listener: got packet from %s\n",				// translate into readable ip address, then print it out
-			inet_ntop(udp_listener_their_addr.ss_family,
-				get_in_addr((struct sockaddr *)&udp_listener_their_addr),
-				udp_listener_s, sizeof udp_listener_s));
-		printf("listener: packet is %d bytes long\n", udp_listener_numbytes);
-		printf("listener: packet contains \"%f\"\n", udp_listener_buf);
-
-		close(udp_listener_sockfd);
-/*
-		//send message to server B
+		//send x to server B
 		if ((udp_B_numbytes = sendto(udp_B_sockfd, &operator, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 udp_B_p->ai_addr, udp_B_p->ai_addrlen)) == -1) {
 			perror("talker: sendto");
 			exit(1);
 		}
 
-		freeaddrinfo(udp_B_servinfo);
+		printf("AWS: sent %f to Backend-Server B\n", operator);
 
-		printf("AWS: sent %d bytes to server B\n", udp_B_numbytes);
-		close(udp_B_sockfd);
-
-		//send message to server C
+		//send x to server C
 		if ((udp_C_numbytes = sendto(udp_C_sockfd, &operator, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 udp_C_p->ai_addr, udp_C_p->ai_addrlen)) == -1) {
 			perror("talker: sendto");
@@ -356,9 +332,76 @@ int main(void)
 
 		freeaddrinfo(udp_C_servinfo);
 
-		printf("AWS: sent %d bytes to server C\n", udp_C_numbytes);
-		close(udp_C_sockfd);
-*/
+		printf("AWS: sent %f to Backend-Server C\n", operator);
+		close(udp_C_sockfd);	// we just use server C for once, so close it after using.
+
+		// receive x^2, x^3, x^5 from A, B, C
+		
+		for (i=0; i<=2; i++) {
+			udp_listener_addr_len = sizeof udp_listener_their_addr;
+			if ((udp_listener_numbytes = recvfrom(udp_listener_sockfd, &udp_listener_buf, 8 , 0,			//wait for the incoming packets
+				(struct sockaddr *)&udp_listener_their_addr, &udp_listener_addr_len)) == -1) {
+				perror("recvfrom");
+				exit(1);
+			}	
+	
+			if (udp_listener_buf[1] == 2.0) {	
+				x2 = udp_listener_buf[0];
+				printf("The AWS received %f from Backend-Server A using UDP over port "SERVER_A_PORT"\n", udp_listener_buf[0]);
+			} else if (udp_listener_buf[1] == 3.0) {
+				x3 = udp_listener_buf[0];
+				printf("The AWS received %f from Backend-Server B using UDP over port "SERVER_B_PORT"\n", udp_listener_buf[0]);
+			} else if (udp_listener_buf[1] == 5.0) {
+				x5 = udp_listener_buf[0];
+				printf("The AWS received %f from Backend-Server C using UDP over port "SERVER_C_PORT"\n", udp_listener_buf[0]);
+			} else 
+				printf("Error, received unkown message\n");
+		}
+
+		//send x^2 to server A
+		if ((udp_A_numbytes = sendto(udp_A_sockfd, &x2, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
+			 udp_A_p->ai_addr, udp_A_p->ai_addrlen)) == -1) {
+			perror("talker: sendto");
+			exit(1);
+		}
+
+		freeaddrinfo(udp_A_servinfo);
+
+		printf("AWS: sent %f to Backend-Server A\n", x2);
+
+		//send x^2 to server B
+		if ((udp_B_numbytes = sendto(udp_B_sockfd, &x2, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
+			 udp_B_p->ai_addr, udp_B_p->ai_addrlen)) == -1) {
+			perror("talker: sendto");
+			exit(1);
+		}
+
+		freeaddrinfo(udp_B_servinfo);
+
+		printf("AWS: sent %f to Backend-Server B\n", x2);
+
+		// receive x^4, x^6 from A, B
+		
+		for (i=0; i<=1; i++) {
+			udp_listener_addr_len = sizeof udp_listener_their_addr;
+			if ((udp_listener_numbytes = recvfrom(udp_listener_sockfd, &udp_listener_buf, 8 , 0,			//wait for the incoming packets
+				(struct sockaddr *)&udp_listener_their_addr, &udp_listener_addr_len)) == -1) {
+				perror("recvfrom");
+				exit(1);
+			}	
+
+			if (udp_listener_buf[1] == 2.0) {	
+				x4 = udp_listener_buf[0];
+				printf("The AWS received %f from Backend-Server A using UDP over port "SERVER_A_PORT"\n", udp_listener_buf[0]);
+			} else if (udp_listener_buf[1] == 3.0) {
+				x6 = udp_listener_buf[0];
+				printf("The AWS received %f from Backend-Server B using UDP over port "SERVER_B_PORT"\n", udp_listener_buf[0]);
+			} else 
+				printf("Error, received unkown message\n");
+		}
+		
+		close(udp_listener_sockfd);
+
 		if (send(new_fd, &operator, 4, 0) == -1)		// parameter 1: socket that's sending
 									// parameter 2: pointer to what you want to send
 									// parameter 3: size you send

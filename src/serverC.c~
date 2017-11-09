@@ -1,4 +1,4 @@
-// Server A source code
+// Server C source code
 
 /*
 ** This is a USC-EE450 Project
@@ -17,7 +17,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#define MYPORT "21831"	// the port AWS will be connecting to
+#define MYPORT "23831"	// the port AWS will be connecting to
 #define AWSPORT "24831" // the port of AWS
 #define MAXBUFLEN 100
 
@@ -41,7 +41,7 @@ int main(void)
 	int numbytes;
 	struct sockaddr_storage their_addr;
 	float buf;
-	float send[2];
+	float send;
 	socklen_t addr_len;
 	char s[INET6_ADDRSTRLEN];
 
@@ -79,7 +79,7 @@ int main(void)
 
 	freeaddrinfo(servinfo);
 
-	printf("The Server A is up and running using UDP on port "MYPORT"\n");
+	printf("The Server C is up and running using UDP on port "MYPORT"\n");
 
 	addr_len = sizeof their_addr;
 	if ((numbytes = recvfrom(sockfd, &buf, 4 , 0,			//wait for the incoming packets
@@ -89,11 +89,10 @@ int main(void)
 	}
 	
 
-	printf("The Server A received input %f\n", buf);
+	printf("The Server C received input %f\n", buf);
 
-	send[0] = buf * buf;		// calculate x^2 here
-	send[1] = 2.0;
-	printf("The Server A calculated square: %f\n", send[0]);
+	send = buf * buf * buf * buf * buf;		// calculate x^2 here
+	printf("The Server C calculated 5th power: %f\n", send);
 
 	close(sockfd);
 
@@ -128,14 +127,14 @@ int main(void)
 		return 2;
 	}
 
-	if ((send_numbytes = sendto(send_sockfd, &send, 8, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
+	if ((send_numbytes = sendto(send_sockfd, &send, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 send_p->ai_addr, send_p->ai_addrlen)) == -1) {
 		perror("senderr: sendto");
 		exit(1);
 	}
 
 	freeaddrinfo(servinfo);
-	printf("The Server A finished sending the output to AWS\n");
+	printf("The Server C finished sending the output to AWS\n");
 	close(send_sockfd);
 
 	return 0;
