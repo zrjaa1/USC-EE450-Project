@@ -22,8 +22,8 @@ int main(int argc, char *argv[])
 	int rv;
 	int numbytes;
 
-	if (argc != 3) {
-		fprintf(stderr,"usage: talker hostname message\n");
+	if (argc != 2) {
+		fprintf(stderr,"usage: talker message\n");
 		exit(1);
 	}
 
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_DGRAM;
 
-	if ((rv = getaddrinfo(argv[1], SERVERPORT, &hints, &servinfo)) != 0) {
+	if ((rv = getaddrinfo("127.0.0.1", SERVERPORT, &hints, &servinfo)) != 0) {	// server port is defined, the hostname should be 127.0.0.1
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
 	}
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 		return 2;
 	}
 
-	if ((numbytes = sendto(sockfd, argv[2], strlen(argv[2]), 0,
+	if ((numbytes = sendto(sockfd, argv[1], strlen(argv[1]), 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 p->ai_addr, p->ai_addrlen)) == -1) {
 		perror("talker: sendto");
 		exit(1);
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 
 	freeaddrinfo(servinfo);
 
-	printf("talker: sent %d bytes to %s\n", numbytes, argv[1]);
+	printf("talker: sent %d bytes to AWS\n", numbytes);
 	close(sockfd);
 
 	return 0;

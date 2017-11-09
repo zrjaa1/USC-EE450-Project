@@ -78,13 +78,13 @@ int main(void)
 	printf("listener: waiting to recvfrom...\n");
 
 	addr_len = sizeof their_addr;
-	if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1 , 0,
+	if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1 , 0,			//wait for the incoming packets
 		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
 		perror("recvfrom");
 		exit(1);
 	}
 
-	printf("listener: got packet from %s\n",
+	printf("listener: got packet from %s\n",				// translate into readable ip address, then print it out
 		inet_ntop(their_addr.ss_family,
 			get_in_addr((struct sockaddr *)&their_addr),
 			s, sizeof s));

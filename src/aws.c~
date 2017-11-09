@@ -18,13 +18,10 @@ Source code from: Socket Programming Reference - (Beej's-Guide)
 #include <sys/wait.h>
 #include <signal.h>
 
-#define PORT "25831"  // the port users will be connecting to
+#define PORT "3490"  // the port users will be connecting to
 #define MAXDATASIZE 100
 #define BACKLOG 10	 // how many pending connections queue will hold
 
-#define SERVER_A_PORT "21831"
-#define SERVER_B_PORT "22831"
-#define SERVER_C_PORT "23831"
 void sigchld_handler(int s)
 {
 	// waitpid() might overwrite errno, so we save and restore it:
@@ -48,8 +45,6 @@ void *get_in_addr(struct sockaddr *sa)
 
 int main(void)
 {
-
-// TCP socket initialization
 	int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
 	struct addrinfo hints, *servinfo, *p;	// 3 address variable
 						// hints is used for storing server address
@@ -65,6 +60,12 @@ int main(void)
 	float recv_buf[2];
 	float operation;
 	float operator;
+
+	float x_2;
+	float x_3;
+	float x_4;
+	float x_5;
+	float x_6;
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -124,40 +125,7 @@ int main(void)
 
 	printf("server: waiting for connections...\n");
 
-// UDP server initialization
-
-	int udp_A_sockfd;
-	struct addrinfo udp_A_hints, *udp_A_servinfo, *udp_A_p;
-	int udp_A_rv;
-	int udp_A_numbytes;
-
-	memset(&udp_A_hints, 0, sizeof udp_A_hints);
-	udp_A_hints.ai_family = AF_UNSPEC;
-	udp_A_hints.ai_socktype = SOCK_DGRAM;
-
-	if ((udp_A_rv = getaddrinfo("127.0.0.1", SERVER_A_PORT, &udp_A_hints, &udp_A_servinfo)) != 0) {	// server port is defined, the hostname should be 127.0.0.1
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(udp_A_rv));
-		return 1;
-	}
-
-	// loop through all the results and make a socket
-	for(udp_A_p = udp_A_servinfo; udp_A_p != NULL; udp_A_p = udp_A_p->ai_next) {
-		if ((udp_A_sockfd = socket(udp_A_p->ai_family, udp_A_p->ai_socktype,
-				udp_A_p->ai_protocol)) == -1) {
-			perror("talker: socket");
-			continue;
-		}
-
-		break;
-	}
-
-	if (udp_A_p == NULL) {
-		fprintf(stderr, "talker: failed to create socket\n");
-		return 2;
-	}
-
-// main loop
-	while(1) {  
+	while(1) {  // main accept() loop
 		sin_size = sizeof their_addr;
 		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);	// accept function is only used in TCP server, create a child socket
 											// parameter 1: mother socket
@@ -193,22 +161,11 @@ int main(void)
 		}
 
 	// instead of saying "hello", the aws works like a client, contact back-servers via UDP here
-		if ((udp_A_numbytes = sendto(udp_A_sockfd, &operator, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
-			 udp_A_p->ai_addr, udp_A_p->ai_addrlen)) == -1) {
-			perror("talker: sendto");
-			exit(1);
-		}
-
-		freeaddrinfo(udp_A_servinfo);
-
-		printf("talker: sent %d bytes to AWS\n", udp_A_numbytes);
-		close(udp_A_sockfd);
-
-		if (send(new_fd, &operator, 4, 0) == -1)		// parameter 1: socket that's sending
-									// parameter 2: pointer to what you want to send
-									// parameter 3: size you send
-									// parameter 4: flag
-			perror("send");
+			if (send(new_fd, &operator, 4, 0) == -1)	// parameter 1: socket that's sending
+										// parameter 2: pointer to what you want to send
+										// parameter 3: size you send
+										// parameter 4: flag
+				perror("send");
 			close(new_fd);
 			exit(0);
 		}
