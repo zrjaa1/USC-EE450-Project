@@ -57,9 +57,9 @@ int main(void)
 	char s[INET6_ADDRSTRLEN];	// buffer used to store address of client (in form of xxx.xxx.xxx.xxx)
 	int rv;			// used to store info of an particular host name, used for display only if error happens	
 	int numbytes;
-	char recv_buf[2];
-	int  operation;
-	char operator[5];
+	float recv_buf[2];
+	float operation;
+	float operator;
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -141,20 +141,21 @@ int main(void)
 			if ((numbytes = recv(new_fd, recv_buf, MAXDATASIZE-1, 0)) == -1) {
 				perror("recv");
 				exit(1);
-			} 
-		if (recv_buf[5] == '0') {
-			operation = 0;
+			}
+
+		operator = recv_buf[0];
+		operation = recv_buf[1];
+
+		printf ("the operator is %f\n", operator);
+	
+		if (recv_buf[1] == 0.0) {
 			printf("the operation is DIV\n");
 		} else {
-			operation = 1;
 			printf("the operation is LOG\n");
 		}
 
-		strncpy(operator, recv_buf, 5);
-
 	// instead of saying "hello", the aws works like a client, contact back-servers via UDP here
-		printf("numbytes equals to %d", numbytes);
-			if (send(new_fd, &operator, numbytes, 0) == -1)	// parameter 1: socket that's sending
+			if (send(new_fd, &operator, 4, 0) == -1)	// parameter 1: socket that's sending
 										// parameter 2: pointer to what you want to send
 										// parameter 3: size you send
 										// parameter 4: flag
