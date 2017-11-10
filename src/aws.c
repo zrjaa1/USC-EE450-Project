@@ -417,7 +417,7 @@ int main(void)
 			return 0;
 		}
 
-		if (send(new_fd, &result, 4, 0) == -1)		// parameter 1: socket that's sending
+		if (send(new_fd, &result, 4, 0) == -1)			// parameter 1: socket that's sending
 									// parameter 2: pointer to what you want to send
 									// parameter 3: size you send
 									// parameter 4: flag
