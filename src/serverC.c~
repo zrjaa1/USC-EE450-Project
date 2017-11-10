@@ -41,7 +41,7 @@ int main(void)
 	int numbytes;
 	struct sockaddr_storage their_addr;
 	float buf;
-	float send;
+	float send[2];
 	socklen_t addr_len;
 	char s[INET6_ADDRSTRLEN];
 
@@ -91,8 +91,9 @@ int main(void)
 
 	printf("The Server C received input %f\n", buf);
 
-	send = buf * buf * buf * buf * buf;		// calculate x^2 here
-	printf("The Server C calculated 5th power: %f\n", send);
+	send[0] = buf * buf * buf * buf * buf;		// calculate x^2 here
+	send[1] = 5.0;
+	printf("The Server C calculated 5th power: %f\n", send[0]);
 
 	close(sockfd);
 
@@ -127,7 +128,7 @@ int main(void)
 		return 2;
 	}
 
-	if ((send_numbytes = sendto(send_sockfd, &send, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
+	if ((send_numbytes = sendto(send_sockfd, &send, 8, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 send_p->ai_addr, send_p->ai_addrlen)) == -1) {
 		perror("senderr: sendto");
 		exit(1);

@@ -79,24 +79,6 @@ int main(void)
 
 	freeaddrinfo(servinfo);
 
-	printf("The Server B is up and running using UDP on port "MYPORT"\n");
-
-	addr_len = sizeof their_addr;
-	if ((numbytes = recvfrom(sockfd, &buf, 4 , 0,			//wait for the incoming packets
-		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
-		perror("recvfrom");
-		exit(1);
-	}
-	
-
-	printf("The Server B received input %f\n", buf);
-
-	send[0] = buf * buf * buf;		// calculate x^3 here
-	send[1] = 3.0;
-	printf("The Server B calculated cube: %f\n", send[0]);
-
-	close(sockfd);
-
 // assign a new socket to send message to AWS
 	int send_sockfd;
 	struct addrinfo send_hints, *send_servinfo, *send_p;
@@ -128,15 +110,37 @@ int main(void)
 		return 2;
 	}
 
+	freeaddrinfo(send_servinfo);
+
+	printf("The Server B is up and running using UDP on port "MYPORT"\n");
+
+// main loop
+
+while(1) {
+	addr_len = sizeof their_addr;
+	if ((numbytes = recvfrom(sockfd, &buf, 4 , 0,			//wait for the incoming packets
+		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+		perror("recvfrom");
+		exit(1);
+	}
+	
+
+	printf("The Server B received input %f\n", buf);
+
+	send[0] = buf * buf * buf;		// calculate x^3 here
+	send[1] = 3.0;
+	printf("The Server B calculated cube: %f\n", send[0]);
+
+//	close(sockfd);
+
 	if ((send_numbytes = sendto(send_sockfd, &send, 8, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 send_p->ai_addr, send_p->ai_addrlen)) == -1) {
 		perror("senderr: sendto");
 		exit(1);
 	}
 
-	freeaddrinfo(servinfo);
 	printf("The Server B finished sending the output to AWS\n");
-	close(send_sockfd);
-
+//	close(send_sockfd);
+}
 	return 0;
 }

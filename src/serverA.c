@@ -79,25 +79,7 @@ int main(void)
 
 	freeaddrinfo(servinfo);
 
-	printf("The Server A is up and running using UDP on port "MYPORT"\n");
-
-	addr_len = sizeof their_addr;
-	if ((numbytes = recvfrom(sockfd, &buf, 4 , 0,			//wait for the incoming packets
-		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
-		perror("recvfrom");
-		exit(1);
-	}
-	
-
-	printf("The Server A received input %f\n", buf);
-
-	send[0] = buf * buf;		// calculate x^2 here
-	send[1] = 2.0;
-	printf("The Server A calculated square: %f\n", send[0]);
-
-	close(sockfd);
-
-// assign a new socket to send message to AWS
+// assign a send socket to send message to AWS
 	int send_sockfd;
 	struct addrinfo send_hints, *send_servinfo, *send_p;
 	int send_rv;
@@ -128,15 +110,39 @@ int main(void)
 		return 2;
 	}
 
+	freeaddrinfo(send_servinfo);
+
+	printf("The Server A is up and running using UDP on port "MYPORT"\n");
+
+	while (1) {
+
+// receive from AWS
+	addr_len = sizeof their_addr;
+	if ((numbytes = recvfrom(sockfd, &buf, 4 , 0,			//wait for the incoming packets
+		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+		perror("recvfrom");
+		exit(1);
+	}
+	
+	printf("The Server A received input %f\n", buf);
+
+	send[0] = buf * buf;		// calculate x^2 here
+	send[1] = 2.0;
+	printf("The Server A calculated square: %f\n", send[0]);
+
+//	close(sockfd);
+
+// calculate and send result to aws
 	if ((send_numbytes = sendto(send_sockfd, &send, 8, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 send_p->ai_addr, send_p->ai_addrlen)) == -1) {
 		perror("senderr: sendto");
 		exit(1);
 	}
 
-	freeaddrinfo(servinfo);
 	printf("The Server A finished sending the output to AWS\n");
-	close(send_sockfd);
+
+//	close(send_sockfd);
+}
 
 	return 0;
 }

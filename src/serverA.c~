@@ -17,7 +17,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#define MYPORT "21832"	// the port AWS will be connecting to
+#define MYPORT "21831"	// the port AWS will be connecting to
 #define AWSPORT "24831" // the port of AWS
 #define MAXBUFLEN 100
 
@@ -41,7 +41,7 @@ int main(void)
 	int numbytes;
 	struct sockaddr_storage their_addr;
 	float buf;
-	float send;
+	float send[2];
 	socklen_t addr_len;
 	char s[INET6_ADDRSTRLEN];
 
@@ -79,7 +79,7 @@ int main(void)
 
 	freeaddrinfo(servinfo);
 
-	printf("listener: waiting to recvfrom...\n");
+	printf("The Server A is up and running using UDP on port "MYPORT"\n");
 
 	addr_len = sizeof their_addr;
 	if ((numbytes = recvfrom(sockfd, &buf, 4 , 0,			//wait for the incoming packets
@@ -89,14 +89,11 @@ int main(void)
 	}
 	
 
-	send = buf * buf;		// calculate x^2 here
+	printf("The Server A received input %f\n", buf);
 
-	printf("listener: got packet from %s\n",				// translate into readable ip address, then print it out
-		inet_ntop(their_addr.ss_family,
-			get_in_addr((struct sockaddr *)&their_addr),
-			s, sizeof s));
-	printf("listener: packet is %d bytes long\n", numbytes);
-	printf("listener: packet contains \"%f\"\n", buf);
+	send[0] = buf * buf;		// calculate x^2 here
+	send[1] = 2.0;
+	printf("The Server A calculated square: %f\n", send[0]);
 
 	close(sockfd);
 
@@ -105,7 +102,7 @@ int main(void)
 	struct addrinfo send_hints, *send_servinfo, *send_p;
 	int send_rv;
 	int send_numbytes;
-
+	
 	memset(&send_hints, 0, sizeof send_hints);
 	send_hints.ai_family = AF_UNSPEC;
 	send_hints.ai_socktype = SOCK_DGRAM;
@@ -119,7 +116,7 @@ int main(void)
 	for(send_p = send_servinfo; send_p != NULL; send_p = send_p->ai_next) {
 		if ((send_sockfd = socket(send_p->ai_family, send_p->ai_socktype,
 				send_p->ai_protocol)) == -1) {
-			perror("talker: socket");
+			perror("sender: socket");
 			continue;
 		}
 
@@ -127,19 +124,18 @@ int main(void)
 	}
 
 	if (send_p == NULL) {
-		fprintf(stderr, "talker: failed to create socket\n");
+		fprintf(stderr, "sender: failed to create socket\n");
 		return 2;
 	}
 
-	if ((send_numbytes = sendto(send_sockfd, &send, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
+	if ((send_numbytes = sendto(send_sockfd, &send, 8, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 send_p->ai_addr, send_p->ai_addrlen)) == -1) {
-		perror("talker: sendto");
+		perror("senderr: sendto");
 		exit(1);
 	}
 
 	freeaddrinfo(servinfo);
-
-	printf("Server A: sent %d bytes to AWS\n", send_numbytes);
+	printf("The Server A finished sending the output to AWS\n");
 	close(send_sockfd);
 
 	return 0;
