@@ -125,11 +125,11 @@ while(1) {
 	}
 	
 
-	printf("The Server C received input %f\n", buf);
+	printf("The Server C received input <%g>\n", buf);
 
 	send[0] = buf * buf * buf * buf * buf;		// calculate x^2 here
 	send[1] = 5.0;
-	printf("The Server C calculated 5th power: %f\n", send[0]);
+	printf("The Server C calculated 5th power: <%g>\n", send[0]);
 
 //	close(sockfd);
 

@@ -51,8 +51,6 @@ int main(int argc, char *argv[])
 	else
 		send_buf[1] = 1.0;
 
-	printf("the 0th in the send_buf is %f\n", send_buf[0]);
-
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
@@ -86,12 +84,21 @@ int main(int argc, char *argv[])
 
 	inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
 			s, sizeof s);
-	printf("client: connecting to %s\n", s);
+	printf("The client is up and running.\n");
 
 	freeaddrinfo(servinfo); // all done with this structure
 
 	if (send(sockfd, &send_buf, 8, 0) == -1)	// send the value of x to aws
 		 perror("send");
+
+	if (send_buf[1] == 0.0)
+		printf("The client sent <%g> and DIV to AWS\n", send_buf[0]);
+	else if (send_buf[1] == 1.0)
+		printf("The client sent <%g> and LOG to AWS\n", send_buf[0]);
+	else {
+		printf("Error, unknown operation type\n");
+		return 0;
+	}
 
 	if ((numbytes = recv(sockfd, recv_buf, MAXDATASIZE-1, 0)) == -1) {	// numbytes: the number of data you actually received
 									// recv_buf: where to store	
@@ -99,7 +106,14 @@ int main(int argc, char *argv[])
 	    exit(1);
 	}
 
-	printf("client: received result: %f\n", *recv_buf);
+	if (send_buf[1] == 0.0)
+		printf("According to AWS, LOG on <%g>: <%g>\n", send_buf[0], *recv_buf);
+	else if (send_buf[1] == 1.0)
+		printf("According to AWS, DIV on <%g>: <%g>\n", send_buf[0], *recv_buf);
+	else {
+		printf("Error, unknown operation type\n");
+		return 0;
+	}
 
 	close(sockfd);
 

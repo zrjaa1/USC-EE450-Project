@@ -125,11 +125,11 @@ while(1) {
 	}
 	
 
-	printf("The Server B received input %f\n", buf);
+	printf("The Server B received input <%g>\n", buf);
 
 	send[0] = buf * buf * buf;		// calculate x^3 here
 	send[1] = 3.0;
-	printf("The Server B calculated cube: %f\n", send[0]);
+	printf("The Server B calculated cube: <%g>\n", send[0]);
 
 //	close(sockfd);
 

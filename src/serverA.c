@@ -124,11 +124,11 @@ int main(void)
 		exit(1);
 	}
 	
-	printf("The Server A received input %f\n", buf);
+	printf("The Server A received input <%g>\n", buf);
 
 	send[0] = buf * buf;		// calculate x^2 here
 	send[1] = 2.0;
-	printf("The Server A calculated square: %f\n", send[0]);
+	printf("The Server A calculated square: <%g>\n", send[0]);
 
 //	close(sockfd);
 

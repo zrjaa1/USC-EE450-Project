@@ -72,6 +72,7 @@ int main(void)
 	float x4;
 	float x5;
 	float x6;
+	float result;
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC;
@@ -299,8 +300,8 @@ int main(void)
 		operator = recv_buf[0];
 		operation = recv_buf[1];
 
-		printf("The AWS received %f", operator);
-		if (operation = 0.0)
+		printf("The AWS received <%g>", operator);
+		if (operation == 0.0)
 			printf(" and function = DIV from the client using TCP over port "PORT"\n");
 		else
 			printf(" and function = LOG from the client using TCP over port "PORT"\n");
@@ -312,7 +313,7 @@ int main(void)
 			exit(1);
 		}
 
-		printf("AWS: sent %f to Backend-Server A\n", operator);
+		printf("AWS: sent <%g> to Backend-Server A\n", operator);
 
 		//send x to server B
 		if ((udp_B_numbytes = sendto(udp_B_sockfd, &operator, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
@@ -321,7 +322,7 @@ int main(void)
 			exit(1);
 		}
 
-		printf("AWS: sent %f to Backend-Server B\n", operator);
+		printf("AWS: sent <%g> to Backend-Server B\n", operator);
 
 		//send x to server C
 		if ((udp_C_numbytes = sendto(udp_C_sockfd, &operator, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
@@ -332,7 +333,7 @@ int main(void)
 
 		freeaddrinfo(udp_C_servinfo);
 
-		printf("AWS: sent %f to Backend-Server C\n", operator);
+		printf("AWS: sent <%g> to Backend-Server C\n", operator);
 		close(udp_C_sockfd);	// we just use server C for once, so close it after using.
 
 		// receive x^2, x^3, x^5 from A, B, C
@@ -347,13 +348,13 @@ int main(void)
 	
 			if (udp_listener_buf[1] == 2.0) {	
 				x2 = udp_listener_buf[0];
-				printf("The AWS received %f from Backend-Server A using UDP over port "SERVER_A_PORT"\n", udp_listener_buf[0]);
+				printf("The AWS received <%g> from Backend-Server A using UDP over port <"SERVER_A_PORT">\n", udp_listener_buf[0]);
 			} else if (udp_listener_buf[1] == 3.0) {
 				x3 = udp_listener_buf[0];
-				printf("The AWS received %f from Backend-Server B using UDP over port "SERVER_B_PORT"\n", udp_listener_buf[0]);
+				printf("The AWS received <%g> from Backend-Server B using UDP over port <"SERVER_B_PORT">\n", udp_listener_buf[0]);
 			} else if (udp_listener_buf[1] == 5.0) {
 				x5 = udp_listener_buf[0];
-				printf("The AWS received %f from Backend-Server C using UDP over port "SERVER_C_PORT"\n", udp_listener_buf[0]);
+				printf("The AWS received <%g> from Backend-Server C using UDP over port <"SERVER_C_PORT">\n", udp_listener_buf[0]);
 			} else 
 				printf("Error, received unkown message\n");
 		}
@@ -367,7 +368,7 @@ int main(void)
 
 		freeaddrinfo(udp_A_servinfo);
 
-		printf("AWS: sent %f to Backend-Server A\n", x2);
+		printf("AWS: sent <%g> to Backend-Server A\n", x2);
 
 		//send x^2 to server B
 		if ((udp_B_numbytes = sendto(udp_B_sockfd, &x2, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
@@ -378,7 +379,7 @@ int main(void)
 
 		freeaddrinfo(udp_B_servinfo);
 
-		printf("AWS: sent %f to Backend-Server B\n", x2);
+		printf("AWS: sent <%g> to Backend-Server B\n", x2);
 
 		// receive x^4, x^6 from A, B
 		
@@ -392,17 +393,31 @@ int main(void)
 
 			if (udp_listener_buf[1] == 2.0) {	
 				x4 = udp_listener_buf[0];
-				printf("The AWS received %f from Backend-Server A using UDP over port "SERVER_A_PORT"\n", udp_listener_buf[0]);
+				printf("The AWS received <%g> from Backend-Server A using UDP over port <"SERVER_A_PORT">\n", udp_listener_buf[0]);
 			} else if (udp_listener_buf[1] == 3.0) {
 				x6 = udp_listener_buf[0];
-				printf("The AWS received %f from Backend-Server B using UDP over port "SERVER_B_PORT"\n", udp_listener_buf[0]);
+				printf("The AWS received <%g> from Backend-Server B using UDP over port <"SERVER_B_PORT">\n", udp_listener_buf[0]);
 			} else 
 				printf("Error, received unkown message\n");
 		}
 		
 		close(udp_listener_sockfd);
 
-		if (send(new_fd, &operator, 4, 0) == -1)		// parameter 1: socket that's sending
+		printf("Values of powers received by AWS: <%g, %g, %g, %g, %g, %g>\n", operator, x2, x3, x4, x5, x6);
+		// now that we get all the results from backend-server, send the result to client.
+
+		if (operation == 0.0) {
+			result = 1 + operator + x2 + x3 + x4 + x5 + x6;
+			printf("AWS calculated DIV on <%g>: <%g>\n", operator, result);
+		}  else if (operation == 1.0) {
+			result = -operator - x2/2 - x3/3 - x4/4 - x5/5 - x6/6; 	
+			printf("AWS calculated LOG on <%g>: <%g>\n", operator, result);
+		}  else {
+			printf("Error, unknown operation type\n");
+			return 0;
+		}
+
+		if (send(new_fd, &result, 4, 0) == -1)		// parameter 1: socket that's sending
 									// parameter 2: pointer to what you want to send
 									// parameter 3: size you send
 									// parameter 4: flag
@@ -410,6 +425,9 @@ int main(void)
 			close(new_fd);
 			exit(0);
 		}
+
+		printf("The AWS sent <%g> to client\n", result);
+
 		close(new_fd);  // parent doesn't need this
 	}
 
