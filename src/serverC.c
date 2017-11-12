@@ -18,8 +18,6 @@
 #include <netdb.h>
 
 #define MYPORT "23831"	// the port AWS will be connecting to
-#define AWSPORT "24831" // the port of AWS
-#define MAXBUFLEN 100
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -90,15 +88,12 @@ while(1) {
 		perror("recvfrom");
 		exit(1);
 	}
-	
 
 	printf("The Server C received input <%g>\n", buf);
 
 	send[0] = buf * buf * buf * buf * buf;		// calculate x^2 here
 	send[1] = 5.0;
 	printf("The Server C calculated 5th power: <%g>\n", send[0]);
-
-//	close(sockfd);
 
 	if ((numbytes = sendto(sockfd, &send, 8, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 (struct sockaddr *)&their_addr, addr_len)) == -1) {
@@ -107,7 +102,6 @@ while(1) {
 	}
 
 	printf("The Server C finished sending the output to AWS\n");
-//	close(send_sockfd);
 }
 	return 0;
 }

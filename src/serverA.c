@@ -18,8 +18,6 @@
 #include <netdb.h>
 
 #define MYPORT "21831"	// the port AWS will be connecting to
-#define AWSPORT "24831" // the port of AWS
-#define MAXBUFLEN 100
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -79,42 +77,9 @@ int main(void)
 
 	freeaddrinfo(servinfo);
 
-/* assign a send socket to send message to AWS
-	int send_sockfd;
-	struct addrinfo send_hints, *send_servinfo, *send_p;
-	int send_rv;
-	int send_numbytes;
-	
-	memset(&send_hints, 0, sizeof send_hints);
-	send_hints.ai_family = AF_UNSPEC;
-	send_hints.ai_socktype = SOCK_DGRAM;
-
-	if ((send_rv = getaddrinfo("127.0.0.1", AWSPORT, &send_hints, &send_servinfo)) != 0) {	// server port is defined, the hostname should be 127.0.0.1
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(send_rv));
-		return 1;
-	}
-
-	// loop through all the results and make a socket
-	for(send_p = send_servinfo; send_p != NULL; send_p = send_p->ai_next) {
-		if ((send_sockfd = socket(send_p->ai_family, send_p->ai_socktype,
-				send_p->ai_protocol)) == -1) {
-			perror("sender: socket");
-			continue;
-		}
-
-		break;
-	}
-
-	if (send_p == NULL) {
-		fprintf(stderr, "sender: failed to create socket\n");
-		return 2;
-	}
-
-	freeaddrinfo(send_servinfo);
-*/
 	printf("The Server A is up and running using UDP on port "MYPORT"\n");
 
-	while (1) {
+while (1) {
 
 // receive from AWS
 	addr_len = sizeof their_addr;
@@ -130,8 +95,6 @@ int main(void)
 	send[1] = 2.0;
 	printf("The Server A calculated square: <%g>\n", send[0]);
 
-//	close(sockfd);
-
 // calculate and send result to aws
 	if ((numbytes = sendto(sockfd, &send, 8, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 (struct sockaddr *)&their_addr, addr_len)) == -1) {
@@ -141,7 +104,6 @@ int main(void)
 
 	printf("The Server A finished sending the output to AWS\n");
 
-//	close(send_sockfd);
 }
 
 	return 0;
