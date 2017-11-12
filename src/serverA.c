@@ -79,7 +79,7 @@ int main(void)
 
 	freeaddrinfo(servinfo);
 
-// assign a send socket to send message to AWS
+/* assign a send socket to send message to AWS
 	int send_sockfd;
 	struct addrinfo send_hints, *send_servinfo, *send_p;
 	int send_rv;
@@ -111,7 +111,7 @@ int main(void)
 	}
 
 	freeaddrinfo(send_servinfo);
-
+*/
 	printf("The Server A is up and running using UDP on port "MYPORT"\n");
 
 	while (1) {
@@ -133,8 +133,8 @@ int main(void)
 //	close(sockfd);
 
 // calculate and send result to aws
-	if ((send_numbytes = sendto(send_sockfd, &send, 8, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
-			 send_p->ai_addr, send_p->ai_addrlen)) == -1) {
+	if ((numbytes = sendto(sockfd, &send, 8, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
+			 (struct sockaddr *)&their_addr, addr_len)) == -1) {
 		perror("senderr: sendto");
 		exit(1);
 	}

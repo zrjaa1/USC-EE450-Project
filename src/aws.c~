@@ -132,12 +132,10 @@ int main(void)
 
 	printf("The AWS is up and running.\n");
 
-// UDP server A initialization
+// server A addr initialization
 
-	int udp_A_sockfd;
 	struct addrinfo udp_A_hints, *udp_A_servinfo, *udp_A_p;
 	int udp_A_rv;
-	int udp_A_numbytes;
 
 	memset(&udp_A_hints, 0, sizeof udp_A_hints);
 	udp_A_hints.ai_family = AF_UNSPEC;
@@ -147,31 +145,13 @@ int main(void)
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(udp_A_rv));
 		return 1;
 	}
-/*
-	// loop through all the results and make a socket
-	for(udp_A_p = udp_A_servinfo; udp_A_p != NULL; udp_A_p = udp_A_p->ai_next) {
-		if ((udp_A_sockfd = socket(udp_A_p->ai_family, udp_A_p->ai_socktype,
-				udp_A_p->ai_protocol)) == -1) {
-			perror("talker: socket");
-			continue;
-		}
 
-		break;
-	}
-
-	if (udp_A_p == NULL) {
-		fprintf(stderr, "talker: failed to create socket\n");
-		return 2;
-	}
-*/
 	udp_A_p = udp_A_servinfo;
-
+	freeaddrinfo(udp_A_servinfo);
 // UDP server B initialization
 
-	int udp_B_sockfd;
 	struct addrinfo udp_B_hints, *udp_B_servinfo, *udp_B_p;
 	int udp_B_rv;
-	int udp_B_numbytes;
 
 	memset(&udp_B_hints, 0, sizeof udp_B_hints);
 	udp_B_hints.ai_family = AF_UNSPEC;
@@ -182,28 +162,13 @@ int main(void)
 		return 1;
 	}
 
-	// loop through all the results and make a socket
-	for(udp_B_p = udp_B_servinfo; udp_B_p != NULL; udp_B_p = udp_B_p->ai_next) {
-		if ((udp_B_sockfd = socket(udp_B_p->ai_family, udp_B_p->ai_socktype,
-				udp_B_p->ai_protocol)) == -1) {
-			perror("talker: socket");
-			continue;
-		}
-
-		break;
-	}
-
-	if (udp_B_p == NULL) {
-		fprintf(stderr, "talker: failed to create socket\n");
-		return 2;
-	}
+	udp_B_p = udp_B_servinfo;
+	freeaddrinfo(udp_B_servinfo);
 
 // UDP server C initialization
 
-	int udp_C_sockfd;
 	struct addrinfo udp_C_hints, *udp_C_servinfo, *udp_C_p;
 	int udp_C_rv;
-	int udp_C_numbytes;
 
 	memset(&udp_C_hints, 0, sizeof udp_C_hints);
 	udp_C_hints.ai_family = AF_UNSPEC;
@@ -214,21 +179,8 @@ int main(void)
 		return 1;
 	}
 
-	// loop through all the results and make a socket
-	for(udp_C_p = udp_C_servinfo; udp_C_p != NULL; udp_C_p = udp_C_p->ai_next) {
-		if ((udp_C_sockfd = socket(udp_C_p->ai_family, udp_C_p->ai_socktype,
-				udp_C_p->ai_protocol)) == -1) {
-			perror("talker: socket");
-			continue;
-		}
-
-		break;
-	}
-
-	if (udp_C_p == NULL) {
-		fprintf(stderr, "talker: failed to create socket\n");
-		return 2;
-	}
+	udp_C_p = udp_C_servinfo;
+	freeaddrinfo(udp_C_servinfo);
 
 // UDP listener initialization
 
@@ -309,7 +261,7 @@ int main(void)
 			printf(" and function = LOG from the client using TCP over port "PORT"\n");
 
 		//send x to server A
-		if ((udp_A_numbytes = sendto(udp_listener_sockfd, &operator, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
+		if ((numbytes = sendto(udp_listener_sockfd, &operator, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 udp_A_p->ai_addr, udp_A_p->ai_addrlen)) == -1) {
 			perror("talker: sendto");
 			exit(1);
@@ -318,7 +270,7 @@ int main(void)
 		printf("AWS: sent <%g> to Backend-Server A\n", operator);
 
 		//send x to server B
-		if ((udp_B_numbytes = sendto(udp_listener_sockfd, &operator, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
+		if ((numbytes = sendto(udp_listener_sockfd, &operator, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 udp_B_p->ai_addr, udp_B_p->ai_addrlen)) == -1) {
 			perror("talker: sendto");
 			exit(1);
@@ -327,22 +279,19 @@ int main(void)
 		printf("AWS: sent <%g> to Backend-Server B\n", operator);
 
 		//send x to server C
-		if ((udp_C_numbytes = sendto(udp_listener_sockfd, &operator, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
+		if ((numbytes = sendto(udp_listener_sockfd, &operator, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 udp_C_p->ai_addr, udp_C_p->ai_addrlen)) == -1) {
 			perror("talker: sendto");
 			exit(1);
 		}
 
-		freeaddrinfo(udp_C_servinfo);
-
 		printf("AWS: sent <%g> to Backend-Server C\n", operator);
-		close(udp_C_sockfd);	// we just use server C for once, so close it after using.
 
 		// receive x^2, x^3, x^5 from A, B, C
 		
 		for (i=0; i<=2; i++) {
 			udp_listener_addr_len = sizeof udp_listener_their_addr;
-			if ((udp_listener_numbytes = recvfrom(udp_listener_sockfd, &udp_listener_buf, 8 , 0,			//wait for the incoming packets
+			if ((numbytes = recvfrom(udp_listener_sockfd, &udp_listener_buf, 8 , 0,			//wait for the incoming packets
 				(struct sockaddr *)&udp_listener_their_addr, &udp_listener_addr_len)) == -1) {
 				perror("recvfrom");
 				exit(1);
@@ -362,24 +311,20 @@ int main(void)
 		}
 
 		//send x^2 to server A
-		if ((udp_A_numbytes = sendto(udp_listener_sockfd, &x2, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
+		if ((numbytes = sendto(udp_listener_sockfd, &x2, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 udp_A_p->ai_addr, udp_A_p->ai_addrlen)) == -1) {
 			perror("talker: sendto");
 			exit(1);
 		}
 
-		freeaddrinfo(udp_A_servinfo);
-
 		printf("AWS: sent <%g> to Backend-Server A\n", x2);
 
 		//send x^2 to server B
-		if ((udp_B_numbytes = sendto(udp_listener_sockfd, &x2, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
+		if ((numbytes = sendto(udp_listener_sockfd, &x2, 4, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
 			 udp_B_p->ai_addr, udp_B_p->ai_addrlen)) == -1) {
 			perror("talker: sendto");
 			exit(1);
 		}
-
-		freeaddrinfo(udp_B_servinfo);
 
 		printf("AWS: sent <%g> to Backend-Server B\n", x2);
 
@@ -387,7 +332,7 @@ int main(void)
 		
 		for (i=0; i<=1; i++) {
 			udp_listener_addr_len = sizeof udp_listener_their_addr;
-			if ((udp_listener_numbytes = recvfrom(udp_listener_sockfd, &udp_listener_buf, 8 , 0,			//wait for the incoming packets
+			if ((numbytes = recvfrom(udp_listener_sockfd, &udp_listener_buf, 8 , 0,			//wait for the incoming packets
 				(struct sockaddr *)&udp_listener_their_addr, &udp_listener_addr_len)) == -1) {
 				perror("recvfrom");
 				exit(1);
