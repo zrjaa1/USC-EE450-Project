@@ -1,1 +1,2 @@
 # USC-EE450-Project
+This is a project source code for USC "EE450 Computer network". In this project, we are supposed to create a Client-Server program, consists of a central server called AWS, and 3 distributed servers called Backend-Server A, B and C. The client will connect with AWS, via TCP, sending the operation DIV or LOG, as well as a value x. The AWS will give the answer back to client, which is calculated by Taylor's Expansion: 1/(1-x) = 1 + x + x^2 + x^3 + x^4 + x^5 + x^6;
