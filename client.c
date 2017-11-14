@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 // UDP socket initialization: (from Beej's-Guide: client.c)
 	int sockfd, numbytes;  
 	float send_buf[2];			// send_buf[0] = operator, send_buf[1] = operation			
-	float* recv_buf;			// receive a float from server as the result
+	float recv_buf;				// receive a float from server as the result
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
 	char s[INET6_ADDRSTRLEN];
@@ -106,16 +106,16 @@ int main(int argc, char *argv[])
 	}
 
 	// receive result from AWS
-	if ((numbytes = recv(sockfd, recv_buf, MAXDATASIZE-1, 0)) == -1) {	// numbytes: the number of data you actually received
+	if ((numbytes = recv(sockfd, &recv_buf, MAXDATASIZE-1, 0)) == -1) {	// numbytes: the number of data you actually received
 										// recv_buf: where to store	
 	    perror("recv");
 	    exit(1);
 	}
 
 	if (send_buf[1] == 0.0)
-		printf("According to AWS, LOG on <%g>:<%g>\n", send_buf[0], *recv_buf);
+		printf("According to AWS, LOG on <%g>:<%g>\n", send_buf[0], recv_buf);
 	else if (send_buf[1] == 1.0)
-		printf("According to AWS, DIV on <%g>:<%g>\n", send_buf[0], *recv_buf);
+		printf("According to AWS, DIV on <%g>:<%g>\n", send_buf[0], recv_buf);
 	else {
 		printf("Error, unknown operation type\n");
 		return 0;
