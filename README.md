@@ -14,25 +14,25 @@
 	client.c:	1 TCP socket is created in this file. The client get x and LOG/DIV from user's inputs and send it to AWS, then wait for answer from AWS.
 	serverA.c:	1 UDP socket is created in this file. The backend-serverA get value of x and send x^2 to AWS. 
 	serverB.c:      1 UDP socket is created in this file. The backend-serverA get value of x and send x^3 to AWS.
-        serverC.c:	1 UDP socket is created in this file. The backend-serverA get value of x and send x^5 to AWS.
+	serverC.c:	1 UDP socket is created in this file. The backend-serverA get value of x and send x^5 to AWS.
 
 ## e. The format of all the message exchanged
-	User's input: 	./client DIV/LOG x, these parameters will be stored in a string array called "argv[]". 
-	In client.c:  	"float send_buf[2]" buf[0] = value of x, buf[1] = 0.0 (means DIV) or 1.0 (means LOG).
-	In aws.c:       "float recv_buf[2]" to store data from client; 
-			"float operator"    to store value of x and is sent to backend-servers
-			"float x2,x3,x4,x5,x6"   to store value of x^2, x^3, x^4, x^5, x^6 received from backend-servers
-			"float result" 	    to store the final value and is sent to client
-	In serverA.c:   "float operator"    to store the value of x received from AWS
-			"float result" 	    to store the power of x and is sent to AWS
-	In serverB.c  	similar to serverA.c
-	In serverC.c 	similar to serverA.c
+User's input: 	./client DIV/LOG x, these parameters will be stored in a string array called "argv[]". 
+In client.c:  	"float send_buf[2]" buf[0] = value of x, buf[1] = 0.0 (means DIV) or 1.0 (means LOG).
+In aws.c:       "float recv_buf[2]" to store data from client; 
+		"float operator"    to store value of x and is sent to backend-servers
+		"float x2,x3,x4,x5,x6"   to store value of x^2, x^3, x^4, x^5, x^6 received from backend-servers
+		"float result" 	    to store the final value and is sent to client
+In serverA.c:   "float operator"    to store the value of x received from AWS
+		"float result" 	    to store the power of x and is sent to AWS
+In serverB.c  	similar to serverA.c
+In serverC.c 	similar to serverA.c
 
 ## f. Idiosyncrasy of my project
-	abnormal interruption of the server process may cause the socket continue occupying the port. Thus the server is not available until the zombie process is killed.
+abnormal interruption of the server process may cause the socket continue occupying the port. Thus the server is not available until the zombie process is killed.
 
 ## g. Reused Code
-	I use sample code from "Beej's Guide to Network Programming" as template. My code is mostly developped from what he puts online. The copy part of his code is commentted in the code file. 
+I use sample code from "Beej's Guide to Network Programming" as template. My code is mostly developped from what he puts online. The copy part of his code is commentted in the code file. 
 
 # USC-EE450-Project
 This is a project source code for USC "EE450 Computer network". 
