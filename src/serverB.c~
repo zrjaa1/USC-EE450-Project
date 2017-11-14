@@ -1,5 +1,5 @@
 
-/* Server B source code: 1 UDP socket
+/* Server B source code
 
 ** This is a USC-EE450 Project
 ** Source code from: Socket Programming Reference - (Beej's-Guide)
@@ -32,7 +32,7 @@ void *get_in_addr(struct sockaddr *sa)
 int main(void)
 {
 
-	// UDP socket initialization: (from Beej's-Guide: listener.c)
+// UDP socket initialization: (from Beej's-Guide: listener.c)
 	int sockfd;
 	struct addrinfo hints, *servinfo, *p;
 	int rv;
@@ -79,31 +79,30 @@ int main(void)
 
 	printf("The Server B is up and running using UDP on port "MYPORT"\n");
 
-	//main loop: 
-	//Receive input from AWS, calculate and send the result back to AWS.
+//main loop: 
+//Receive input from AWS, calculate and send the result back to AWS.
 
-	while(1) {
-		addr_len = sizeof their_addr;
-		if ((numbytes = recvfrom(sockfd, &buf, 4 , 0,	//wait for the incoming packets
-			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
-			perror("recvfrom");
-			exit(1);
-		}
+while(1) {
+	addr_len = sizeof their_addr;
+	if ((numbytes = recvfrom(sockfd, &buf, 4 , 0,			//wait for the incoming packets
+		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+		perror("recvfrom");
+		exit(1);
+	}
 	
-		printf("The Server B received input <%g>\n", buf);
+	printf("The Server B received input <%g>\n", buf);
 
-		send[0] = buf * buf * buf;			// calculate x^3 here
-		send[1] = 3.0;
-		printf("The Server B calculated cube: <%g>\n", send[0]);
+	send[0] = buf * buf * buf;		// calculate x^3 here
+	send[1] = 3.0;
+	printf("The Server B calculated cube: <%g>\n", send[0]);
 
-		if ((numbytes = sendto(sockfd, &send, 8, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
-				 (struct sockaddr *)&their_addr, addr_len)) == -1) {
-			perror("senderr: sendto");
-			exit(1);
-		}
-
-		printf("The Server B finished sending the output to AWS\n");
+	if ((numbytes = sendto(sockfd, &send, 8, 0,	// send to UDP server, the address is assigned in getaddrinfo function above
+			 (struct sockaddr *)&their_addr, addr_len)) == -1) {
+		perror("senderr: sendto");
+		exit(1);
 	}
 
+	printf("The Server B finished sending the output to AWS\n");
+}
 	return 0;
 }
